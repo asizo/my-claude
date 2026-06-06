@@ -1,0 +1,49 @@
+# CLAUDE.local.md — my-claude repo 전용 개발 지침
+
+> 이 파일은 **이 repo(my-claude)에서 작업할 때만** 적용된다. `~/.claude/`로 심링크하지 않으며(전역 미적용), git에 커밋한다.
+> 전역 규칙은 `CLAUDE.md`(→ `~/.claude/CLAUDE.md`로 심링크)와 `rules/*.md`를 따른다. 본 파일은 그 위에 **이 repo 고유의 작업 규칙**만 더한다.
+
+---
+
+## 이 repo의 정체성
+
+- `my-claude/`는 **Claude Code 전역 설정의 소스(SoT)**다. 셋업 스크립트가 이 안의 파일을 `~/.claude/`로 **심링크**한다.
+- 따라서 `~/.claude/CLAUDE.md`, `~/.claude/rules/*` 등을 편집한다는 것은 **이 repo의 원본을 편집**하는 것과 같다.
+- `settings.json`의 `deny`가 `Edit/Write(~/.claude/**)`를 차단한다. **항상 이 repo의 소스 경로에서 직접 편집**한다(`~/.claude/**` 경로로 편집 금지 — deny에 걸린다).
+- 심링크 대상이 **아닌** 파일: `CLAUDE.original.md`(원본 보존), `CLAUDE.local.md`(본 파일), `README.md`.
+
+---
+
+## 편집 시 불변 규칙
+
+1. **파일 명명 규칙은 날짜-앞**: `YYYYMMDD_{영문_스네이크케이스_제목}.md` (예: `20250416_api_design.md`). work_history는 `YYYYMMDDHHII_work_history.md`. 신규 문서·예시·스크립트 모두 이 형식을 따른다.
+2. **신규 `rules/<name>.md` 추가 시**: 반드시 `CLAUDE.md`의 **Auto-Loaded Rules 라우팅 표**에도 행을 추가한다(누락 시 새 규칙이 로드되지 않음).
+3. **신규 루트 파일이 전역에 필요하면**: `README.md`의 **셋업 심링크 루프**와 **전수조사(무결성) 스크립트** 목록 양쪽에 파일명을 추가한다. 전역 미적용 파일(`CLAUDE.local.md` 등)은 추가하지 않는다.
+4. **신규 훅 스크립트 추가 시**: `settings.json` 훅 등록 + `README.md` hooks 표 + 무결성 스크립트의 "훅↔스크립트 매칭" 목록에 반영한다.
+5. **시크릿 금지**: 코드·로그·문서·`tasks/`에 토큰/키/비밀번호를 넣지 않는다. 훅 스크립트는 기록·출력 시 마스킹 sed를 적용한다.
+6. **라이브 상태 파일은 프로젝트별**: `tasks/todo.md`, `tasks/lessons.md`는 per-project. `templates/`의 동명 파일은 전역 골격일 뿐 라이브 상태가 아니다.
+
+---
+
+## 변경 후 검증 (필수)
+
+설정·규칙·스크립트를 바꾼 뒤 **반드시** `README.md` §12의 전수조사 스크립트를 실행한다. 최소 항목:
+
+```bash
+cd "$HOME/Documents/source/my-claude"   # 실제 소스 경로에 맞게 조정
+jq empty settings.json && echo "settings.json OK"     # JSON 문법
+for f in *.sh; do sh -n "$f" && echo "$f OK"; done    # shell 문법
+# 라우팅 표 ↔ 실제 rules 일치
+diff <(grep -oE 'rules/[a-z-]+\.md' CLAUDE.md | sed 's|rules/||' | sort -u) <(ls rules/ | sort) && echo "라우팅 일치"
+```
+
+- 훅 스크립트는 **임시 디렉토리에서 샌드박스 실행**으로 동작·마스킹을 검증한 뒤 의존한다(프로덕션 경로 오염 금지).
+- `settings.json` 변경은 **새 세션**을 시작해야 적용·검증된다.
+
+---
+
+## 커밋 규칙
+
+- 전역 `rules/common/git-workflow.md`의 Conventional Commits를 따른다(`feat`/`fix`/`docs`/`chore` 등).
+- 커밋은 **사용자 명시 요청 시에만** 수행한다(전역 승인 게이트 적용).
+- 포맷-only 변경과 동작 변경을 한 커밋에 섞지 않는다.

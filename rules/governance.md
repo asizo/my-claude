@@ -14,14 +14,14 @@
 │   ├── todo.md                         # Active task checklist + Working Notes (live state)
 │   └── lessons.md                      # Accumulated mistakes and lessons
 ├── docs/
-│   ├── project_overview_YYYYMMDD.md    # Project structure summary (created on init)
-│   ├── work_history_YYYYMMDDHHII.md    # Session handoff file (created on /compact, immutable)
-│   ├── {document_title}_YYYYMMDD.md    # Agent-generated documents
+│   ├── YYYYMMDD_project_overview.md    # Project structure summary (created on init)
+│   ├── YYYYMMDDHHII_work_history.md    # Session handoff file (created on /compact, immutable)
+│   ├── YYYYMMDD_{document_title}.md    # Agent-generated documents
 │   ├── references/                     # Externally received documents (PRDs, API specs, etc. — permanent)
 │   └── archive/
 │       └── YYYY-MM/
-│           ├── work_history_*.md       # work_history files older than 30 days
-│           └── lessons_YYYYMMDD.md     # Archived lessons (created on periodic review)
+│           ├── *_work_history.md       # work_history files older than 30 days
+│           └── YYYYMMDD_lessons.md     # Archived lessons (created on periodic review)
 ├── agents/                             # Subagent definition files
 ├── skills/                             # Project-level reusable skills
 └── .devcontainer/
@@ -41,9 +41,9 @@
 - All agent-generated documents go into `docs/`. All externally received documents go into `docs/references/`. Never mix the two.
 - Documents derived from external references (edited, expanded, or summarized by the agent) are saved as new files in `docs/` with `> derived from: references/{original_filename}` at the top.
 - `docs/references/` is excluded from archiving (external originals are preserved permanently).
-- Archive rules apply to `work_history_*.md` and `lessons_YYYYMMDD.md` only. All other `docs/` files are retained in place permanently.
+- Archive rules apply to `*_work_history.md` and `YYYYMMDD_lessons.md` only. All other `docs/` files are retained in place permanently.
 - `tasks/` is for task tracking only. Never record secrets or API keys here.
-- File naming convention: `{title_in_english_snake_case}_YYYYMMDD.md`
+- File naming convention: `YYYYMMDD_{title_in_english_snake_case}.md`
 
 ---
 
@@ -54,10 +54,10 @@
 When starting a new project, before any other work:
 
 1. Verify `docs/` and `tasks/` directories exist; create them if missing.
-2. Create `tasks/todo.md` and `tasks/lessons.md` if they do not exist.
-3. Scan the project structure and write `docs/project_overview_YYYYMMDD.md` summarizing:
+2. Create `tasks/todo.md` and `tasks/lessons.md` if they do not exist (`tasks/lessons.md` 는 `~/.claude/templates/lessons.md` 골격으로 시작).
+3. Scan the project structure and write `docs/YYYYMMDD_project_overview.md` summarizing:
    - purpose, tech stack, directory layout, and any known constraints.
-4. Check for existing `docs/work_history_*.md` files and load context before proceeding.
+4. Check for existing `docs/*_work_history.md` files and load context before proceeding.
 
 ---
 
@@ -65,8 +65,8 @@ When starting a new project, before any other work:
 
 - `document_root` is the project root (the directory where `CLAUDE.md` is located).
 - All documents are stored under `{document_root}/docs/`.
-- File naming convention: `{document_title_in_english_snake_case}_YYYYMMDD.md`
-  - e.g. `api_design_20250416.md`, `refactor_plan_20250416.md`
+- File naming convention: `YYYYMMDD_{document_title_in_english_snake_case}.md`
+  - e.g. `20250416_api_design.md`, `20250416_refactor_plan.md`
 
 ### External Reference Documents
 
@@ -79,7 +79,7 @@ When starting a new project, before any other work:
 - When updating an existing document, create a new file with the current date (do not overwrite).
 - Do not delete older versions — retain them for history.
 - If a new document supersedes an older one, add at the top of the new file:
-  - `> supersedes: previous_document_name_YYYYMMDD.md`
+  - `> supersedes: YYYYMMDD_previous_document_name.md`
 
 ### Security in Documents
 
@@ -93,16 +93,16 @@ When starting a new project, before any other work:
 
 > **Important:** 모델이 작성하는 풍부한 work_history 는 자동이 아니다. `/compact` 시 아래 절차를 먼저 수행한다.
 >
-> **안전망(PreCompact 훅):** compact(수동·자동) 직전 `precompact.sh` 가 git 변경 파일·최근 명령·최근 사용자 요청을 모아 `docs/work_history_*.md` **스냅샷**을 자동 저장한다(`# Work History (auto-snapshot)` 헤더로 식별). 이는 **자동 compact 시 핸드오프 누락을 막는 기계적 안전망**이며, 모델이 작성한 핸드오프를 대체하지 않는다. 모델이 최근 3분 내 work_history 를 이미 작성했다면 스냅샷은 생략된다. auto-snapshot 파일을 발견하면 다음 세션에서 내용을 검토·보강한다.
+> **안전망(PreCompact 훅):** compact(수동·자동) 직전 `precompact.sh` 가 git 변경 파일·최근 명령·최근 사용자 요청을 모아 `docs/*_work_history.md` **스냅샷**을 자동 저장한다(`# Work History (auto-snapshot)` 헤더로 식별). 이는 **자동 compact 시 핸드오프 누락을 막는 기계적 안전망**이며, 모델이 작성한 핸드오프를 대체하지 않는다. 모델이 최근 3분 내 work_history 를 이미 작성했다면 스냅샷은 생략된다. auto-snapshot 파일을 발견하면 다음 세션에서 내용을 검토·보강한다.
 
 Procedure (order is mandatory):
 
-1. Write `docs/work_history_YYYYMMDDHHII.md`.
+1. Write `docs/YYYYMMDDHHII_work_history.md`.
 2. Confirm the file was saved successfully.
 3. Only then proceed with context compression.
 
-File path: `docs/work_history_YYYYMMDDHHII.md`
-(e.g. `docs/work_history_202504161430.md`)
+File path: `docs/YYYYMMDDHHII_work_history.md`
+(e.g. `docs/202504161430_work_history.md`)
 
 - The file must be complete enough for the next agent to resume without any additional context.
 - Once created, the file is immutable. If an update is needed, create a new file.
@@ -116,8 +116,8 @@ File path: `docs/work_history_YYYYMMDDHHII.md`
 ### Work History Archiving
 
 - Work history files older than 30 days (based on the date in the filename) are moved to `docs/archive/YYYY-MM/`.
-  - e.g. `docs/work_history_202503161430.md` → `docs/archive/2025-03/work_history_202503161430.md`
-- `lessons_YYYYMMDD.md` files are archived to `docs/archive/YYYY-MM/` on periodic review.
+  - e.g. `docs/202503161430_work_history.md` → `docs/archive/2025-03/202503161430_work_history.md`
+- `YYYYMMDD_lessons.md` files are archived to `docs/archive/YYYY-MM/` on periodic review.
 - Never delete archived files.
 - `docs/references/` is excluded from archiving.
 
@@ -125,7 +125,7 @@ File path: `docs/work_history_YYYYMMDDHHII.md`
 
 ## Starting a New Session
 
-1. Read all `docs/work_history_*.md` files in chronological order (oldest first, within the 30-day window).
+1. Read all `docs/*_work_history.md` files in chronological order (oldest first, within the 30-day window).
    - Reading only the latest file is insufficient — full decision history and change context must be understood.
 2. Review `tasks/todo.md` and `tasks/lessons.md`.
 3. If a setup script (`setup.sh`, `Makefile`, etc.) exists in the project root, run it first.
@@ -138,7 +138,7 @@ File path: `docs/work_history_YYYYMMDDHHII.md`
 
 **Notes:**
 - `tasks/todo.md` is the live state of the active task. No obligation to update it after session end.
-- `docs/work_history_*.md` is an immutable snapshot taken at session end. If the two conflict, work_history is the source of truth (SoT).
+- `docs/*_work_history.md` is an immutable snapshot taken at session end. If the two conflict, work_history is the source of truth (SoT).
 - If the previous session ended without `/compact` (no work_history created), treat `tasks/todo.md` as the source of truth for that session.
 - If no Pending feature list exists (first session or no work_history), wait for user instructions.
 - Archived files in `docs/archive/` are for reference only and are not part of the mandatory read sequence.

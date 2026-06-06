@@ -139,7 +139,7 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "*",
+        "matcher": "startup|resume",
         "hooks": [
           {
             "type": "command",
@@ -155,8 +155,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh ~/.claude/audit-log.sh",
-            "timeout": 2
+            "command": "nohup sh ~/.claude/audit-log.sh >/dev/null 2>&1 &",
+            "timeout": 600
           }
         ]
       }
@@ -191,7 +191,7 @@
           {
             "type": "command",
             "command": "sh ~/.claude/precompact.sh",
-            "timeout": 10
+            "timeout": 600
           }
         ]
       }

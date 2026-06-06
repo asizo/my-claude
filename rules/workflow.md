@@ -88,9 +88,9 @@
    - Add a short "Results" section: what changed, where, how verified.
 6. **Capture Lessons**
    - Update `tasks/lessons.md` after corrections or postmortems.
-   - On periodic review, move entries that are no longer valid to `docs/archive/YYYY-MM/lessons_YYYYMMDD.md`.
+   - On periodic review, move entries that are no longer valid to `docs/archive/YYYY-MM/YYYYMMDD_lessons.md`.
 7. **Audit Trail**
    - For any high-risk action (file deletion, external call, deployment), log in `tasks/todo.md`:
      - what was requested, what was executed, what tool was used, and the outcome.
    - Record human approvals explicitly: who approved, when, and for what action.
-   - On `/compact`, audit trail entries are carried over into `docs/work_history_*.md`.
+   - On `/compact`, audit trail entries are carried over into `docs/*_work_history.md`.

@@ -1,6 +1,6 @@
 # Work History Template
 
-> 세션 핸드오프 문서 골격. `/compact` 시 `docs/work_history_YYYYMMDDHHII.md`로 작성 (불변).
+> 세션 핸드오프 문서 골격. `/compact` 시 `docs/YYYYMMDDHHII_work_history.md`로 작성 (불변).
 > 절차·규칙은 `~/.claude/rules/governance.md`의 `Work History (/compact)` 참조.
 > 출처: 원본 CLAUDE.md의 `Work History Template`.
 

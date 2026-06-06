@@ -2,7 +2,7 @@
 # Claude Code PreCompact hook
 #
 # 동작: compact(수동 /compact · 자동) 직전, 세션 핸드오프 스냅샷을
-#       프로젝트 docs/work_history_YYYYMMDDHHII.md 로 자동 저장한다.
+#       프로젝트 docs/YYYYMMDDHHII_work_history.md 로 자동 저장한다.
 #  - 자동 compact 시에도 핸드오프 누락을 방지 (governance.md work_history 규약 보강용 안전망)
 #  - git 작업 트리 변경 파일 + audit.log 최근 명령(마스킹·노이즈 제외) + 최근 사용자 요청을 기계 수집
 #  - 모델이 직접 작성한 핸드오프가 더 정확함 → 본 파일은 스냅샷이며 헤더에 (auto) 표시, 다음 세션에서 보강
@@ -37,14 +37,14 @@ docs="$cwd/docs"
 mkdir -p "$docs" 2>/dev/null || true
 
 # 최근 3분 내 작성된 work_history 가 있으면 모델이 직접 작성한 것으로 보고 스냅샷 생략 (중복 방지)
-existing=$(find "$docs" -maxdepth 1 -name 'work_history_*.md' -mmin -3 2>/dev/null | head -1 || true)
+existing=$(find "$docs" -maxdepth 1 -name '*_work_history.md' -mmin -3 2>/dev/null | head -1 || true)
 if [ -n "$existing" ]; then
   printf 'PreCompact: 최근 work_history 존재 → 스냅샷 생략 (%s)\n' "$(basename "$existing")"
   exit 0
 fi
 
 ts=$(date +%Y%m%d%H%M)
-out="$docs/work_history_${ts}.md"
+out="$docs/${ts}_work_history.md"
 
 # 시크릿 마스킹 (sessionstart.sh 와 동일 표현식)
 mask='s/(token|password|secret|api[_-]?key|authorization|bearer)[^[:space:]]*/[REDACTED]/gI; s/(sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|gho_[A-Za-z0-9]{8,}|ghs_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|AKIA[0-9A-Z]{8,}|xox[baprs]-[0-9A-Za-z-]{8,})/[REDACTED]/g'
