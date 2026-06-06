@@ -91,7 +91,9 @@ When starting a new project, before any other work:
 
 ## Work History (`/compact`)
 
-> **Important:** work_history saving is NOT automatic. When the user runs `/compact`, complete the steps below before compressing context.
+> **Important:** 모델이 작성하는 풍부한 work_history 는 자동이 아니다. `/compact` 시 아래 절차를 먼저 수행한다.
+>
+> **안전망(PreCompact 훅):** compact(수동·자동) 직전 `precompact.sh` 가 git 변경 파일·최근 명령·최근 사용자 요청을 모아 `docs/work_history_*.md` **스냅샷**을 자동 저장한다(`# Work History (auto-snapshot)` 헤더로 식별). 이는 **자동 compact 시 핸드오프 누락을 막는 기계적 안전망**이며, 모델이 작성한 핸드오프를 대체하지 않는다. 모델이 최근 3분 내 work_history 를 이미 작성했다면 스냅샷은 생략된다. auto-snapshot 파일을 발견하면 다음 세션에서 내용을 검토·보강한다.
 
 Procedure (order is mandatory):
 

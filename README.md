@@ -4,7 +4,8 @@ Claude Code 글로벌 설정 모음. `~/.claude/`에 심링크로 연결하여 �
 
 - **설계 철학**: 토큰은 한정 자원 → 정확도와 직결. 매 세션 로드는 얇게(`CLAUDE.md`), 상세 규칙은 **자동 라우팅**으로 필요할 때만 로드.
 - **안전장치**: 승인 게이트(상시) · 권한 가드레일 · 시크릿 차단/마스킹 · 명령 감사 로그.
-- **출처**: 모놀리식 단일 `CLAUDE.md`(원본 → `CLAUDE.original.md`로 보존)를 `rules/` + `templates/` 구조로 분할하고, 훅·권한·커맨드·서브에이전트 인프라를 도입한 버전.
+- **출처**: [kon6443/claude-config](https://github.com/kon6443/claude-config) 구조를 기반으로 재구성.
+- **구성 내력**: 모놀리식 단일 `CLAUDE.md`(원본 → `CLAUDE.original.md`로 보존)를 `rules/` + `templates/` 구조로 분할하고, 훅·권한·커맨드·서브에이전트 인프라를 도입한 버전.
 
 ---
 
@@ -20,6 +21,7 @@ my-claude/
 ├── audit-log.sh              # PreToolUse hook — Bash 명령 감사(마스킹 기록)
 ├── check-secrets.sh          # UserPromptSubmit hook — 시크릿 패턴 차단
 ├── sessionstart.sh           # SessionStart hook — 활동 요약 + 위험 명령 + 로그 회전
+├── precompact.sh             # PreCompact hook — compact 직전 work_history 스냅샷 자동 저장
 ├── README.md
 ├── rules/                    # 상황별 규칙 (CLAUDE.md 자동 라우팅으로 로드)
 │   ├── workflow.md           #   계획·플랜·다중 단계 작업 + Task Management
@@ -122,6 +124,7 @@ my-claude/
 | `SessionStart` | `sessionstart.sh` | 직전 활동 요약(cwd 매칭·노이즈 필터·시크릿 마스킹·24h 윈도) + 위험 명령 강조 + audit.log 일 1회 gzip 회전 + 1MB 초과 시 즉시 trim + CLAUDE.md 미존재 시 1회 안내. **stdout 출력만 — 컨텍스트 토큰 0** |
 | `UserPromptSubmit` | `check-secrets.sh` | 프롬프트에 시크릿 패턴 발견 시 **모델 전송 전 차단**(exit 2) |
 | `PreToolUse(Bash)` | `audit-log.sh` | 모든 Bash 명령을 `~/.claude/audit.log`에 기록. **기록 시점에 시크릿 마스킹**(디스크 평문 저장 방지) |
+| `PreCompact` | `precompact.sh` | compact(수동 `/compact`·자동) 직전 `docs/work_history_YYYYMMDDHHII.md` 스냅샷 자동 저장(git 변경 파일 + 최근 명령·요청, 마스킹). **자동 compact 시에도 핸드오프 누락 방지.** 최근 3분 내 work_history 존재 시 생략(중복 방지) |
 | `Notification` | (인라인) | macOS `osascript` 또는 Linux `notify-send` 알림 |
 
 ### audit.log 회전 정책
@@ -186,7 +189,7 @@ SRC="$HOME/Documents/source/claude-config/my-claude"
 
 mkdir -p ~/.claude
 TS=$(date +%Y%m%d_%H%M%S)
-for f in CLAUDE.md AGENTS.md settings.json statusline-command.sh audit-log.sh check-secrets.sh sessionstart.sh agents commands rules templates; do
+for f in CLAUDE.md AGENTS.md settings.json statusline-command.sh audit-log.sh check-secrets.sh sessionstart.sh precompact.sh agents commands rules templates; do
   src="$SRC/$f"
   dst="$HOME/.claude/$f"
   [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ] && { echo "✓ $f: skip"; continue; }
@@ -244,7 +247,7 @@ for f in CLAUDE.md AGENTS.md settings.json \
          rules/workflow.md rules/engineering.md rules/error-recovery.md rules/git-hygiene.md \
          rules/context.md rules/governance.md rules/tooling.md rules/devcontainer.md \
          templates/plan.md templates/bugfix.md templates/sprint-contract.md templates/work-history.md \
-         sessionstart.sh audit-log.sh check-secrets.sh statusline-command.sh; do
+         sessionstart.sh precompact.sh audit-log.sh check-secrets.sh statusline-command.sh; do
   [ -e "$f" ] && printf "  OK   %-30s %5s bytes\n" "$f" "$(wc -c<"$f"|tr -d ' ')" || printf "  MISS %s\n" "$f"
 done
 
@@ -265,7 +268,7 @@ for s in sessionstart.sh audit-log.sh check-secrets.sh statusline-command.sh; do
 done
 
 echo "═══ 6. 심링크 상태 ═══"
-for f in CLAUDE.md AGENTS.md settings.json statusline-command.sh audit-log.sh check-secrets.sh sessionstart.sh agents commands rules templates; do
+for f in CLAUDE.md AGENTS.md settings.json statusline-command.sh audit-log.sh check-secrets.sh sessionstart.sh precompact.sh agents commands rules templates; do
   link="$HOME/.claude/$f"
   if [ -L "$link" ] && [ -e "$link" ]; then echo "  OK $f"
   elif [ -L "$link" ]; then echo "  BROKEN $f"

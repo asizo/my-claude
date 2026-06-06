@@ -183,6 +183,18 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh ~/.claude/precompact.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
