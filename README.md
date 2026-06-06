@@ -2,6 +2,7 @@
 
 Claude Code 글로벌 설정 모음. `~/.claude/`에 심링크로 연결하여 여러 컴퓨터에서 동일 환경을 유지한다.
 
+- **버전**: `v0.4.0` (2026-06-06) — 전체 변경 이력은 문서 맨 아래 [§14 변경 이력](#14-변경-이력-changelog).
 - **설계 철학**: 토큰은 한정 자원 → 정확도와 직결. 매 세션 로드는 얇게(`CLAUDE.md`), 상세 규칙은 **자동 라우팅**으로 필요할 때만 로드.
 - **안전장치**: 승인 게이트(상시) · 권한 가드레일 · 시크릿 차단/마스킹 · 명령 감사 로그.
 - **출처**: [kon6443/claude-config](https://github.com/kon6443/claude-config) 구조를 기반으로 재구성.
@@ -286,3 +287,27 @@ done
 
 - `CLAUDE.original.md` = 분할 전 모놀리식 원본(26KB). 내용 손실 없이 보존되어 있어, 분할 구조가 맞지 않으면 이 파일로 되돌릴 수 있다.
 - 분할본과 원본의 내용 차이를 확인하려면: 각 `rules/*.md`의 `> 출처:` 헤더가 원본의 어느 섹션에서 왔는지 명시한다.
+
+---
+
+## 14. 변경 이력 (Changelog)
+
+> [Keep a Changelog](https://keepachangelog.com) 형식 · [SemVer](https://semver.org). **설정·규칙·스크립트를 변경하면 이 섹션에 항목을 추가하고 상단 `버전`을 갱신한다.**
+> 출처: [kon6443/claude-config](https://github.com/kon6443/claude-config) 구조를 기반으로 재구성. 구성 내력은 모놀리식 단일 `CLAUDE.md`(원본 → `CLAUDE.original.md` 보존)를 `rules/` + `templates/`로 분할하고 훅·권한·커맨드·서브에이전트 인프라를 도입한 것이다.
+
+### v0.4.0 — 2026-06-06
+- 템플릿 산출물 저장 경로 명시: `plan` → `tasks/todo.md`(라이브)/보관 시 `tasks/YYYYMMDD_todo_{요약}.md`, `bugfix` → 인라인 기본/`tasks/YYYYMMDD_bugfix_{요약}.md`, `sprint-contract` → `tasks/todo.md` 상단/`tasks/YYYYMMDD_sprint_{요약}.md`, `work-history` → `docs/YYYYMMDDHHII_work_history.md`.
+- **구분자 2원칙 명문화** (governance): repo 구조 파일 = kebab-case(하이픈), 생성 산출물 = 날짜-앞·언더스코어 snake_case.
+- README 버전 정보 + 변경 이력(Changelog) 섹션 도입.
+
+### v0.3.0 — 2026-06-06
+- 파일 명명 규칙을 **날짜-앞**(`YYYYMMDD_{제목}.md`)으로 전면 전환.
+- `CLAUDE.local.md`(이 repo 전용 개발 지침), `devcontainer-guide.md`(devcontainer 상세 가이드), `templates/lessons.md`(누적 교훈 골격) 추가.
+
+### v0.2.0 — 2026-06-06
+- `PreCompact` 훅(`precompact.sh`) 도입 — compact(수동·자동) 직전 work_history 스냅샷 자동 저장으로 **자동 compact 핸드오프 누락 방지**.
+- 출처(kon6443/claude-config) 표기.
+
+### v0.1.0 — 2026-06-06
+- 초기 구성: 모놀리식 `CLAUDE.md`를 **상시 로드 핵심 + 자동 라우팅 `rules/*` + `templates/*`** 로 분할(원본 `CLAUDE.original.md` 보존).
+- 훅(SessionStart·PreToolUse 감사·UserPromptSubmit 시크릿 차단)·권한 가드레일·슬래시 커맨드·서브에이전트·README 사용 매뉴얼 도입.

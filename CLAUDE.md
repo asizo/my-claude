@@ -107,9 +107,10 @@ When in doubt, stop and ask. Never infer approval from context.
 
 ## Templates 참조
 
-- 작업 계획: `~/.claude/templates/plan.md`
-- 버그 리포트: `~/.claude/templates/bugfix.md`
-- 스프린트 계약: `~/.claude/templates/sprint-contract.md`
-- 세션 핸드오프(`/compact`): `~/.claude/templates/work-history.md`
+- 작업 계획: 골격 `~/.claude/templates/plan.md` → `tasks/todo.md`(라이브 체크리스트) / 보관 시 `tasks/YYYYMMDD_todo_{요약}.md`
+- 버그 리포트: 골격 `~/.claude/templates/bugfix.md` → 인라인 기본 / 보관 시 `tasks/YYYYMMDD_bugfix_{요약}.md`
+- 스프린트 계약: 골격 `~/.claude/templates/sprint-contract.md` → `tasks/todo.md` 상단 / 보관 시 `tasks/YYYYMMDD_sprint_{요약}.md`
+- 세션 핸드오프(`/compact`): 골격 `~/.claude/templates/work-history.md` → 산출물 저장 `{project_root}/docs/YYYYMMDDHHII_work_history.md`
 
 자동 라우팅 표에서 트리거되며, 사용자가 직접 요청해도 동일하게 사용한다.
+위 `~/.claude/templates/*` 는 **골격**이다. 실제 산출물은 task 산출물(plan·bugfix·sprint)은 `tasks/`, 세션 핸드오프는 `docs/`에 저장하며, **생성 산출물 파일명은 날짜-앞·언더스코어**(`YYYYMMDD_{제목}.md`) 규칙을 따른다. (repo 구조 파일명은 kebab-case)

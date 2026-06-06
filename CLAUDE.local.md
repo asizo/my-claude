@@ -16,12 +16,15 @@
 
 ## 편집 시 불변 규칙
 
-1. **파일 명명 규칙은 날짜-앞**: `YYYYMMDD_{영문_스네이크케이스_제목}.md` (예: `20250416_api_design.md`). work_history는 `YYYYMMDDHHII_work_history.md`. 신규 문서·예시·스크립트 모두 이 형식을 따른다.
+1. **파일 명명 — 구분자 2원칙**:
+   - **repo 구조 파일**(`rules/`·`templates/`·`commands/`·`agents/`·`*.sh`): **kebab-case(하이픈)**. 예: `error-recovery.md`, `audit-log.sh`.
+   - **생성 산출물**(`docs/`·`tasks/` 날짜 스탬프 문서): **날짜-앞·언더스코어 snake_case** — `YYYYMMDD_{영문_스네이크케이스_제목}.md` (예: `20250416_api_design.md`), work_history는 `YYYYMMDDHHII_work_history.md`. 하이픈 미사용.
 2. **신규 `rules/<name>.md` 추가 시**: 반드시 `CLAUDE.md`의 **Auto-Loaded Rules 라우팅 표**에도 행을 추가한다(누락 시 새 규칙이 로드되지 않음).
 3. **신규 루트 파일이 전역에 필요하면**: `README.md`의 **셋업 심링크 루프**와 **전수조사(무결성) 스크립트** 목록 양쪽에 파일명을 추가한다. 전역 미적용 파일(`CLAUDE.local.md` 등)은 추가하지 않는다.
 4. **신규 훅 스크립트 추가 시**: `settings.json` 훅 등록 + `README.md` hooks 표 + 무결성 스크립트의 "훅↔스크립트 매칭" 목록에 반영한다.
 5. **시크릿 금지**: 코드·로그·문서·`tasks/`에 토큰/키/비밀번호를 넣지 않는다. 훅 스크립트는 기록·출력 시 마스킹 sed를 적용한다.
 6. **라이브 상태 파일은 프로젝트별**: `tasks/todo.md`, `tasks/lessons.md`는 per-project. `templates/`의 동명 파일은 전역 골격일 뿐 라이브 상태가 아니다.
+7. **변경 이력 갱신**: 설정·규칙·스크립트를 바꾸면 `README.md` §14 변경 이력(Changelog)에 항목을 추가하고 상단 `버전`(SemVer)을 갱신한다.
 
 ---
 

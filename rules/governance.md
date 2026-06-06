@@ -44,6 +44,9 @@
 - Archive rules apply to `*_work_history.md` and `YYYYMMDD_lessons.md` only. All other `docs/` files are retained in place permanently.
 - `tasks/` is for task tracking only. Never record secrets or API keys here.
 - File naming convention: `YYYYMMDD_{title_in_english_snake_case}.md`
+- **구분자 규칙 (2원칙, 용도별):**
+  - **repo 구조 파일** (`rules/`·`templates/`·`commands/`·`agents/`·`*.sh`): **kebab-case (하이픈)**. 예: `error-recovery.md`, `work-history.md`, `audit-log.sh`.
+  - **생성 산출물** (`docs/`·`tasks/`의 날짜 스탬프 문서): **snake_case + 언더스코어**, 날짜-앞. 예: `YYYYMMDD_project_overview.md`, `YYYYMMDDHHII_work_history.md`, `tasks/YYYYMMDD_bugfix_{요약}.md`. **하이픈 미사용.**
 
 ---
 
