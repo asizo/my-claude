@@ -14,6 +14,16 @@
 
 ---
 
+## 참고 매뉴얼 (repo 문서)
+
+Claude Code 환경 구성·운영 매뉴얼은 repo 루트에 있다(README §15 색인). 관련 작업 시 참조:
+- `claude-code-plugin-setup-guide.md` — 플러그인(ECC·claude-hud) 설치
+- `claude-code-permission-modes.md` — 권한(승인) 모드
+- `serena-claude-code-manual.md` — Serena 연동
+- `devcontainer-guide.md` — devcontainer + Claude Code 통합 (유일하게 `~/.claude/`로 심링크, `rules/devcontainer.md`가 참조)
+
+---
+
 ## 편집 시 불변 규칙
 
 1. **파일 명명 — 구분자 2원칙**:

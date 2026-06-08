@@ -2,7 +2,7 @@
 
 Claude Code 글로벌 설정 모음. `~/.claude/`에 심링크로 연결하여 여러 컴퓨터에서 동일 환경을 유지한다.
 
-- **버전**: `v0.4.0` (2026-06-06) — 전체 변경 이력은 문서 맨 아래 [§14 변경 이력](#14-변경-이력-changelog).
+- **버전**: `v0.5.0` (2026-06-08) — 전체 변경 이력은 문서 맨 아래 [§14 변경 이력](#14-변경-이력-changelog).
 - **설계 철학**: 토큰은 한정 자원 → 정확도와 직결. 매 세션 로드는 얇게(`CLAUDE.md`), 상세 규칙은 **자동 라우팅**으로 필요할 때만 로드.
 - **안전장치**: 승인 게이트(상시) · 권한 가드레일 · 시크릿 차단/마스킹 · 명령 감사 로그.
 - **출처**: [kon6443/claude-config](https://github.com/kon6443/claude-config) 구조를 기반으로 재구성.
@@ -24,7 +24,10 @@ my-claude/
 ├── check-secrets.sh          # UserPromptSubmit hook — 시크릿 패턴 차단
 ├── sessionstart.sh           # SessionStart hook — 활동 요약 + 위험 명령 + 로그 회전
 ├── precompact.sh             # PreCompact hook — compact 직전 work_history 스냅샷 자동 저장
-├── devcontainer-guide.md     # devcontainer 생성 상세 가이드 (~/.claude/로 심링크)
+├── devcontainer-guide.md     # devcontainer + Claude Code 통합 상세 가이드 (~/.claude/로 심링크)
+├── claude-code-plugin-setup-guide.md   # 참고 매뉴얼 — 플러그인(ECC·claude-hud) 설치 (§15)
+├── claude-code-permission-modes.md     # 참고 매뉴얼 — 권한(승인) 모드 정리 (§15)
+├── serena-claude-code-manual.md        # 참고 매뉴얼 — Serena 연동 (§15)
 ├── README.md
 ├── rules/                    # 상황별 규칙 (CLAUDE.md 자동 라우팅으로 로드)
 │   ├── workflow.md           #   계획·플랜·다중 단계 작업 + Task Management
@@ -295,6 +298,11 @@ done
 > [Keep a Changelog](https://keepachangelog.com) 형식 · [SemVer](https://semver.org). **설정·규칙·스크립트를 변경하면 이 섹션에 항목을 추가하고 상단 `버전`을 갱신한다.**
 > 출처: [kon6443/claude-config](https://github.com/kon6443/claude-config) 구조를 기반으로 재구성. 구성 내력은 모놀리식 단일 `CLAUDE.md`(원본 → `CLAUDE.original.md` 보존)를 `rules/` + `templates/`로 분할하고 훅·권한·커맨드·서브에이전트 인프라를 도입한 것이다.
 
+### v0.5.0 — 2026-06-08
+- **참고 매뉴얼 추가** (§15): `claude-code-plugin-setup-guide.md`(플러그인 설치), `claude-code-permission-modes.md`(권한 모드), `serena-claude-code-manual.md`(Serena 연동).
+- `devcontainer-guide.md` 를 **devcontainer + Claude Code 통합 가이드**로 보강(Dockerfile Node18+CLI 설치·부가 패키지·로케일·세션 격리·보안·트러블슈팅). 중복 문서 `devcontainer_claude_code_integration_reference.md` 통합 후 제거.
+- README §15 참고 매뉴얼 색인 + `CLAUDE.local.md` 에 매뉴얼 포인터 추가.
+
 ### v0.4.0 — 2026-06-06
 - 템플릿 산출물 저장 경로 명시: `plan` → `tasks/todo.md`(라이브)/보관 시 `tasks/YYYYMMDD_todo_{요약}.md`, `bugfix` → 인라인 기본/`tasks/YYYYMMDD_bugfix_{요약}.md`, `sprint-contract` → `tasks/todo.md` 상단/`tasks/YYYYMMDD_sprint_{요약}.md`, `work-history` → `docs/YYYYMMDDHHII_work_history.md`.
 - **구분자 2원칙 명문화** (governance): repo 구조 파일 = kebab-case(하이픈), 생성 산출물 = 날짜-앞·언더스코어 snake_case.
@@ -311,3 +319,16 @@ done
 ### v0.1.0 — 2026-06-06
 - 초기 구성: 모놀리식 `CLAUDE.md`를 **상시 로드 핵심 + 자동 라우팅 `rules/*` + `templates/*`** 로 분할(원본 `CLAUDE.original.md` 보존).
 - 훅(SessionStart·PreToolUse 감사·UserPromptSubmit 시크릿 차단)·권한 가드레일·슬래시 커맨드·서브에이전트·README 사용 매뉴얼 도입.
+
+---
+
+## 15. 참고 매뉴얼
+
+Claude Code 환경 구성·운영을 돕는 repo 문서. 파일명은 kebab-case. `devcontainer-guide.md`만 `~/.claude/`로 심링크되며 나머지는 **이 repo 안에서만 참조**(전역 미적용).
+
+| 문서 | 내용 |
+|---|---|
+| [`claude-code-plugin-setup-guide.md`](claude-code-plugin-setup-guide.md) | Docker 컨테이너에서 ECC·claude-hud 플러그인 설치 절차 |
+| [`claude-code-permission-modes.md`](claude-code-permission-modes.md) | 파일 편집·명령 실행 승인(권한) 모드 정리 |
+| [`serena-claude-code-manual.md`](serena-claude-code-manual.md) | Serena 연동 설치·사용 — 코드베이스 이해·프로젝트 맥락 강화 |
+| [`devcontainer-guide.md`](devcontainer-guide.md) | devcontainer + Claude Code 통합(마운트·Node18+CLI·로케일·세션 격리·트러블슈팅). `rules/devcontainer.md`가 생성 전 읽는 상세 가이드 |
