@@ -26,15 +26,15 @@
 input=$(cat)
 
 # --- 입력 JSON 파싱 (필드가 없으면 빈 문자열로 안전 처리) ---
-cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // empty')
-model=$(echo "$input" | jq -r '.model.display_name // empty')
+cwd=$(printf '%s' "$input" | jq -r '.workspace.current_dir // .cwd // empty')
+model=$(printf '%s' "$input" | jq -r '.model.display_name // empty')
 # 개선: 백분율이 소수(float)로 와도 POSIX 산술이 깨지지 않도록 jq에서 floor 적용
-remaining=$(echo "$input" | jq -r '((.context_window.remaining_percentage // (.context_window.used_percentage | if . then (100 - .) else null end)) // empty) | if type == "number" then floor else . end')
-rate_5h_used=$(echo "$input" | jq -r 'if .rate_limits.five_hour.used_percentage != null then (.rate_limits.five_hour.used_percentage | floor) else empty end')
-resets_at=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
+remaining=$(printf '%s' "$input" | jq -r '((.context_window.remaining_percentage // (.context_window.used_percentage | if . then (100 - .) else null end)) // empty) | if type == "number" then floor else . end')
+rate_5h_used=$(printf '%s' "$input" | jq -r 'if .rate_limits.five_hour.used_percentage != null then (.rate_limits.five_hour.used_percentage | floor) else empty end')
+resets_at=$(printf '%s' "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 
-lines_added=$(echo "$input" | jq -r '.cost.total_lines_added // empty')
-lines_removed=$(echo "$input" | jq -r '.cost.total_lines_removed // empty')
+lines_added=$(printf '%s' "$input" | jq -r '.cost.total_lines_added // empty')
+lines_removed=$(printf '%s' "$input" | jq -r '.cost.total_lines_removed // empty')
 
 dir=$(basename "$cwd")
 
@@ -45,6 +45,8 @@ if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
 fi
 
 # 5h session reset countdown (resets_at은 unix epoch seconds)
+# 방어: epoch가 아닌 형식(ISO 8601 등)이 오면 산술 에러로 상태줄 전체가 깨지므로 숫자만 허용
+case "$resets_at" in ''|*[!0-9]*) resets_at="" ;; esac
 session_left=""
 if [ -n "$resets_at" ]; then
   now=$(date +%s)

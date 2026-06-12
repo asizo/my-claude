@@ -46,8 +46,10 @@ Claude Code 환경 구성·운영 매뉴얼은 repo 루트에 있다(README §15
 cd "$HOME/Documents/source/my-claude"   # 실제 소스 경로에 맞게 조정
 jq empty settings.json && echo "settings.json OK"     # JSON 문법
 for f in *.sh; do sh -n "$f" && echo "$f OK"; done    # shell 문법
-# 라우팅 표 ↔ 실제 rules 일치
-diff <(grep -oE 'rules/[a-z-]+\.md' CLAUDE.md | sed 's|rules/||' | sort -u) <(ls rules/ | sort) && echo "라우팅 일치"
+# 라우팅 표 ↔ 실제 rules 일치 (문서용 README.md 제외)
+diff <(grep -oE 'rules/[a-z-]+\.md' CLAUDE.md | sed 's|rules/||' | sort -u) <(ls rules/ | grep -v '^README\.md$' | sort) && echo "라우팅 일치"
+# 마스킹 패턴 3중 동기화 (audit-log/sessionstart/precompact — 드리프트 시 시크릿 누출)
+[ "$(for f in audit-log.sh sessionstart.sh precompact.sh; do grep '^mask=' "$f" | cksum; done | sort -u | wc -l | tr -d ' ')" = 1 ] && echo "mask 동기화 OK"
 ```
 
 - 훅 스크립트는 **임시 디렉토리에서 샌드박스 실행**으로 동작·마스킹을 검증한 뒤 의존한다(프로덕션 경로 오염 금지).
@@ -57,6 +59,6 @@ diff <(grep -oE 'rules/[a-z-]+\.md' CLAUDE.md | sed 's|rules/||' | sort -u) <(ls
 
 ## 커밋 규칙
 
-- 전역 `rules/common/git-workflow.md`의 Conventional Commits를 따른다(`feat`/`fix`/`docs`/`chore` 등).
+- `rules/git-hygiene.md`(+ ECC 설치 시 `git-workflow` 스킬)의 Conventional Commits를 따른다(`feat`/`fix`/`docs`/`chore` 등).
 - 커밋은 **사용자 명시 요청 시에만** 수행한다(전역 승인 게이트 적용).
 - 포맷-only 변경과 동작 변경을 한 커밋에 섞지 않는다.

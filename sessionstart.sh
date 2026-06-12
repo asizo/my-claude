@@ -69,7 +69,7 @@ fi
 output=""
 
 # 시크릿 마스킹 sed 표현식 (stdout 노출 방지)
-mask='s/(token|password|secret|api[_-]?key|authorization|bearer)[^[:space:]]*/[REDACTED]/gI; s/(sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|gho_[A-Za-z0-9]{8,}|ghs_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|AKIA[0-9A-Z]{8,}|xox[baprs]-[0-9A-Za-z-]{8,})/[REDACTED]/g'
+mask='s#://[^:@/[:space:]]+:[^@/[:space:]]+@#://[REDACTED]@#g; s/(authorization[[:space:]]*:[[:space:]]*)(bearer[[:space:]]+|basic[[:space:]]+|token[[:space:]]+)?[A-Za-z0-9._~+\/=-]{8,}/\1\2[REDACTED]/gI; s/(bearer[[:space:]]+)[A-Za-z0-9._~+\/=-]{8,}/\1[REDACTED]/gI; s/(token|password|passwd|secret|api[_-]?key)[^[:space:]]*/[REDACTED]/gI; s/(sk-[A-Za-z0-9_-]{8,}|sk_(live|test)_[A-Za-z0-9]{8,}|ghp_[A-Za-z0-9]{8,}|gho_[A-Za-z0-9]{8,}|ghs_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|AKIA[0-9A-Z]{8,}|AIza[0-9A-Za-z_-]{20,}|xox[baprs]-[0-9A-Za-z-]{8,}|eyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{4,})/[REDACTED]/g'
 
 if [ -f "$log" ]; then
   # 최근 활동: 현재 cwd 매칭 + 노이즈 필터 + 시크릿 마스킹 + 5건

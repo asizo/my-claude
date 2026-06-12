@@ -10,16 +10,18 @@
 input=$(cat)
 
 ts=$(date '+%Y-%m-%d %H:%M:%S')
-cwd=$(echo "$input" | jq -r '.cwd // "?"' 2>/dev/null)
-cmd=$(echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+cwd=$(printf '%s' "$input" | jq -r '.cwd // "?"' 2>/dev/null)
+cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
 [ -z "$cmd" ] && exit 0
 
 # 시크릿 마스킹 (토큰·키·인라인 자격증명이 평문으로 적히는 것을 방지)
-mask='s/(token|password|secret|api[_-]?key|authorization|bearer)[^[:space:]]*/[REDACTED]/gI; s/(sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|gho_[A-Za-z0-9]{8,}|ghs_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|AKIA[0-9A-Z]{8,}|xox[baprs]-[0-9A-Za-z-]{8,})/[REDACTED]/g'
+mask='s#://[^:@/[:space:]]+:[^@/[:space:]]+@#://[REDACTED]@#g; s/(authorization[[:space:]]*:[[:space:]]*)(bearer[[:space:]]+|basic[[:space:]]+|token[[:space:]]+)?[A-Za-z0-9._~+\/=-]{8,}/\1\2[REDACTED]/gI; s/(bearer[[:space:]]+)[A-Za-z0-9._~+\/=-]{8,}/\1[REDACTED]/gI; s/(token|password|passwd|secret|api[_-]?key)[^[:space:]]*/[REDACTED]/gI; s/(sk-[A-Za-z0-9_-]{8,}|sk_(live|test)_[A-Za-z0-9]{8,}|ghp_[A-Za-z0-9]{8,}|gho_[A-Za-z0-9]{8,}|ghs_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|AKIA[0-9A-Z]{8,}|AIza[0-9A-Za-z_-]{20,}|xox[baprs]-[0-9A-Za-z-]{8,}|eyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{4,})/[REDACTED]/g'
 cmd=$(printf '%s' "$cmd" | sed -E "$mask" 2>/dev/null || printf '%s' "$cmd")
 
+umask 077
 echo "[$ts] [$cwd] $cmd" >> "$HOME/.claude/audit.log"
+chmod 600 "$HOME/.claude/audit.log" 2>/dev/null || true
 
 # hook은 항상 정상 종료 (실패해도 본 작업 막지 않음)
 exit 0

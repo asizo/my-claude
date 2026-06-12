@@ -2,7 +2,7 @@
 
 Claude Code 글로벌 설정 모음. `~/.claude/`에 심링크로 연결하여 여러 컴퓨터에서 동일 환경을 유지한다.
 
-- **버전**: `v0.5.0` (2026-06-08) — 전체 변경 이력은 문서 맨 아래 [§14 변경 이력](#14-변경-이력-changelog).
+- **버전**: `v0.8.1` (2026-06-11) — 전체 변경 이력은 문서 맨 아래 [§14 변경 이력](#14-변경-이력-changelog).
 - **설계 철학**: 토큰은 한정 자원 → 정확도와 직결. 매 세션 로드는 얇게(`CLAUDE.md`), 상세 규칙은 **자동 라우팅**으로 필요할 때만 로드.
 - **안전장치**: 승인 게이트(상시) · 권한 가드레일 · 시크릿 차단/마스킹 · 명령 감사 로그.
 - **출처**: [kon6443/claude-config](https://github.com/kon6443/claude-config) 구조를 기반으로 재구성.
@@ -28,6 +28,7 @@ my-claude/
 ├── claude-code-plugin-setup-guide.md   # 참고 매뉴얼 — 플러그인(ECC·claude-hud) 설치 (§15)
 ├── claude-code-permission-modes.md     # 참고 매뉴얼 — 권한(승인) 모드 정리 (§15)
 ├── serena-claude-code-manual.md        # 참고 매뉴얼 — Serena 연동 (§15)
+├── .gitignore                # .DS_Store 등 제외
 ├── README.md
 ├── rules/                    # 상황별 규칙 (CLAUDE.md 자동 라우팅으로 로드)
 │   ├── workflow.md           #   계획·플랜·다중 단계 작업 + Task Management
@@ -47,7 +48,8 @@ my-claude/
 ├── commands/                 # 슬래시 커맨드
 │   ├── review.md             #   /review — 플로우 기반 QA 리뷰
 │   ├── pr-desc.md            #   /pr-desc — PR 제목·설명 자동 생성
-│   └── tasks-dashboard.md    #   /tasks-dashboard — 태스크 진행 대시보드
+│   ├── tasks-dashboard.md    #   /tasks-dashboard — 태스크 진행 대시보드
+│   └── worktree-agent.md     #   /worktree-agent — git worktree 격리 가이드
 └── agents/                   # 서브에이전트 (읽기 전용 조사용)
     ├── codebase-investigator.md
     ├── cross-project-researcher.md
@@ -74,7 +76,7 @@ my-claude/
 | 스킬·MCP·커맨드·서브에이전트 (ECC 설치 환경) | `rules/tooling.md` |
 | `.devcontainer/devcontainer.json` 생성·수정 | `rules/devcontainer.md` |
 
-- **장점**: 매 세션 자동 로드 토큰 절감(원본 26KB → 상시 7KB, 약 74%↓) + 상황별 정밀 적용.
+- **장점**: 매 세션 자동 로드 토큰 절감(원본 26KB → 상시 7.5KB, 약 72%↓, 바이트 근사) + 상황별 정밀 적용.
 - **면제**: 단일 한 줄 수정, 단순 정보 조회, 1회성 명령은 라우팅 면제.
 - **다중 매칭**: 둘 이상 매칭되면 모두 로드 (예: 버그 수정 코드 작성 → engineering + error-recovery).
 - **주의**: 신규 `rules/<name>.md` 추가 시 **반드시** `CLAUDE.md` 라우팅 표에도 행을 추가한다. 누락 시 새 규칙이 적용되지 않는다.
@@ -106,8 +108,9 @@ my-claude/
 | `/review` | 변경 코드에 대한 플로우 기반 QA 리뷰. grep 전수 추적 · 대칭 분기 검증 · Ripple Check · 실행 검증(추측 금지) |
 | `/pr-desc` | 커밋 diff 기반 PR 제목·본문 한국어 자동 생성 (추측 금지, 민감정보 비노출) |
 | `/tasks-dashboard` | 태스크 파일을 코드 실제 상태와 대조해 진행 대시보드 생성. 동기화는 항목별 사용자 승인 |
+| `/worktree-agent` | git worktree로 agent 작업 격리(병렬 mutation·큰 리팩토링·실험적 변경). `isolation: 'worktree'` 적용 판단·머지 절차 가이드. **사용자 명시 호출 시에만** |
 
-사용 예: `/tasks-dashboard all`, `/pr-desc`, `/review`
+사용 예: `/tasks-dashboard all`, `/pr-desc`, `/review`, `/worktree-agent`
 
 ---
 
@@ -142,7 +145,7 @@ my-claude/
 | 회전 방식 | gzip 압축 → `~/.claude/backups/audit.log.YYYY-MM-DD.gz` |
 | 보관 기간 | 30일 (이후 자동 삭제) |
 | 안전망 | 1MB 초과 시 즉시 `tail -10000`로 trim |
-| 시크릿 마스킹 | 기록 시점(audit-log.sh) + stdout 표시 시점(sessionstart.sh) 양쪽 |
+| 시크릿 마스킹 | 기록 시점(audit-log.sh) + stdout 표시 시점(sessionstart.sh) 양쪽. **베스트에포트** — 알려진 패턴(인라인 URL 자격증명·Bearer/JWT·`sk-`/`sk_live`/`ghp_`/`AKIA`/`AIza`/`xox` 등)만 커버, 완전 차단 보장 아님 |
 | 외부 의존성 | 없음 (launchd/cron/logrotate 불필요) |
 
 ---
@@ -152,7 +155,7 @@ my-claude/
 | 구분 | 동작 | 예시 |
 |---|---|---|
 | `allow` | 자동 실행 | git 읽기 명령, 패키지 매니저, 일반 유틸 (`grep`, `find`, `jq`, `gh`, `cat`/`head`/`tail`/`sed`/`awk`) |
-| `ask` | 매번 확인 | `git push/commit/merge/rebase/stash/tag`, `docker`, `rm`, **`curl`/`python`/`python3`/`node`** |
+| `ask` | 매번 확인 | `git push/commit/merge/rebase/stash/tag`, `docker`, `rm`, **`curl`/`python`/`python3`/`node`**, **DB/인프라 고위험**(`psql`/`mysql`/`mongosh`/`kubectl`/`terraform apply`·`destroy`) — 승인 게이트와 정합 |
 | `deny` | 무조건 차단 | `rm -rf /` 변형, `git push --force/-f`, `git reset --hard`, `curl\|bash` 변형, ssh/env/credentials 읽기(다중 명령), `Edit/Write(~/.claude/**)`, `npm publish` 등 |
 
 ### 권한 설계 의도와 한계 (중요)
@@ -192,7 +195,7 @@ my-claude/
 
 ```bash
 # 소스 경로 (현재 위치에 맞게 조정)
-SRC="$HOME/Documents/source/claude-config/my-claude"
+SRC="$HOME/Documents/source/my-claude"
 
 mkdir -p ~/.claude
 TS=$(date +%Y%m%d_%H%M%S)
@@ -237,8 +240,8 @@ zcat ~/.claude/backups/audit.log.2026-04-28.gz | grep ...   # 과거 로그 검�
 # 라우팅 표가 모든 분할 파일을 가리키는지
 grep -E 'rules/|templates/' ~/.claude/CLAUDE.md
 
-# 신규 rules 파일 추가 후 라우팅 표 갱신 누락 확인
-diff <(ls ~/.claude/rules/*.md | xargs -n1 basename) \
+# 신규 rules 파일 추가 후 라우팅 표 갱신 누락 확인 (문서용 README.md 제외)
+diff <(ls ~/.claude/rules/*.md | xargs -n1 basename | grep -v '^README\.md$') \
      <(grep -oE 'rules/[a-z-]+\.md' ~/.claude/CLAUDE.md | sort -u | xargs -n1 basename)
 ```
 
@@ -247,14 +250,16 @@ diff <(ls ~/.claude/rules/*.md | xargs -n1 basename) \
 설정을 변경할 때마다 실행해 구성·라우팅·문법·권한·SSOT 무결성을 한 번에 확인한다.
 
 ```bash
-cd "$HOME/Documents/source/claude-config/my-claude"   # 소스 경로에 맞게 조정
+cd "$HOME/Documents/source/my-claude"   # 소스 경로에 맞게 조정
 
 echo "═══ 1. 파일 존재 + 크기 ═══"
 for f in CLAUDE.md AGENTS.md settings.json \
          rules/workflow.md rules/engineering.md rules/error-recovery.md rules/git-hygiene.md \
          rules/context.md rules/governance.md rules/tooling.md rules/devcontainer.md \
          templates/plan.md templates/bugfix.md templates/sprint-contract.md templates/work-history.md templates/lessons.md \
-         devcontainer-guide.md sessionstart.sh precompact.sh audit-log.sh check-secrets.sh statusline-command.sh; do
+         commands/*.md agents/*.md \
+         devcontainer-guide.md claude-code-permission-modes.md claude-code-plugin-setup-guide.md serena-claude-code-manual.md .gitignore \
+         sessionstart.sh precompact.sh audit-log.sh check-secrets.sh statusline-command.sh; do
   [ -e "$f" ] && printf "  OK   %-30s %5s bytes\n" "$f" "$(wc -c<"$f"|tr -d ' ')" || printf "  MISS %s\n" "$f"
 done
 
@@ -264,7 +269,7 @@ for f in *.sh; do sh -n "$f" && echo "  $f OK"; done
 
 echo "═══ 3. 라우팅 표 ↔ 실제 rules 일치 ═══"
 diff <(grep -oE 'rules/[a-z-]+\.md' CLAUDE.md | sed 's|rules/||' | sort -u) \
-     <(ls rules/ | sort) && echo "  ✅ 완전 일치"
+     <(ls rules/ | grep -v '^README\.md$' | sort) && echo "  ✅ 완전 일치"
 
 echo "═══ 4. DoD SSOT (정의 1곳) ═══"
 grep -l "^## Definition of Done" CLAUDE.md rules/*.md 2>/dev/null
@@ -282,6 +287,10 @@ for f in CLAUDE.md AGENTS.md settings.json statusline-command.sh audit-log.sh ch
   elif [ -e "$link" ]; then echo "  FILE $f (not a symlink)"
   else echo "  MISS $f"; fi
 done
+
+echo "═══ 7. 마스킹 패턴 3중 동기화 (드리프트 시 시크릿 평문 누출) ═══"
+n=$(for f in audit-log.sh sessionstart.sh precompact.sh; do grep '^mask=' "$f" | cksum; done | sort -u | wc -l | tr -d ' ')
+[ "$n" = "1" ] && echo "  ✅ 3개 스크립트 mask 패턴 동일" || echo "  ⚠️ mask 패턴 불일치 — audit-log/sessionstart/precompact 재동기화 필요"
 ```
 
 ---
@@ -297,6 +306,28 @@ done
 
 > [Keep a Changelog](https://keepachangelog.com) 형식 · [SemVer](https://semver.org). **설정·규칙·스크립트를 변경하면 이 섹션에 항목을 추가하고 상단 `버전`을 갱신한다.**
 > 출처: [kon6443/claude-config](https://github.com/kon6443/claude-config) 구조를 기반으로 재구성. 구성 내력은 모놀리식 단일 `CLAUDE.md`(원본 → `CLAUDE.original.md` 보존)를 `rules/` + `templates/`로 분할하고 훅·권한·커맨드·서브에이전트 인프라를 도입한 것이다.
+
+### v0.8.1 — 2026-06-11
+- **디렉토리별 매뉴얼 추가**: `agents/`·`commands/`·`rules/`·`templates/` 각각에 `README.md`(파일 목록·용도·규칙) 추가. `agents/README.md`는 frontmatter가 없어 서브에이전트 스캐너가 무시(확인), `rules/`·`templates/`는 자동 스캔 비대상. `commands/README.md`는 `/README` 등록 가능성(공식 문서 미명시)을 파일 내 주의로 명기.
+- **무결성 스크립트 라우팅 diff 보정**: `rules/README.md` 추가로 `ls rules/` ↔ 라우팅 표 비교가 깨지지 않도록 README §12의 두 diff와 `CLAUDE.local.md` 검증 블록에서 `README.md`를 제외 처리.
+
+### v0.8.0 — 2026-06-11
+- **감사 로그 동작 복구 (실버그 수정)**: `PreToolUse(Bash)` 훅이 `nohup … &`로 백그라운드 실행되어 비대화형 셸이 stdin을 `/dev/null`로 분리 → `audit-log.sh`가 빈 입력을 받아 **한 줄도 기록하지 못하던** 문제 수정. 동기 실행(`sh ~/.claude/audit-log.sh`, timeout 10s)으로 전환 — 다른 훅과 일관. 샌드박스+실배포 양쪽에서 무기록 확인 후 수정·재검증(기록·마스킹·권한 600 정상).
+- **무결성 스크립트 보강 (§12)**: 마스킹 패턴 3중 동기화 검증(`audit-log`/`sessionstart`/`precompact`의 `mask=` 일치) 추가 — 드리프트 시 시크릿 평문 누출을 사전 차단. 이식성 위해 `cksum` 사용. `CLAUDE.local.md` 검증 블록에도 동일 항목 반영.
+- **devcontainer 보안 주의(rules/devcontainer.md)**: `~/.ssh` readonly 마운트가 `deny Read(~/.ssh/**)`로 보호되나 `--dangerously-skip-permissions` 모드에서는 노출 가능함을 명시.
+
+### v0.7.0 — 2026-06-10
+- **평가 기반 보안·견고성 강화** (다차원 평가 워크플로 결과 반영):
+  - 시크릿 마스킹 패턴 확장 — 인라인 URL 자격증명·`Authorization`/`Bearer` 토큰·JWT·`sk_live`/`AIza` 등 추가, `audit-log`/`precompact`/`sessionstart` 3개 동기화.
+  - settings.json `ask`에 DB/인프라 고위험 명령 추가(`psql`/`mysql`/`mongosh`/`kubectl`/`terraform apply`·`destroy`) — 승인 게이트↔권한 정합.
+  - `audit-log.sh`·`statusline-command.sh`의 `echo "$input" | jq` → `printf '%s'` 통일(다중행 명령 감사 무음 누락 해소).
+  - `audit.log` `umask 077` + `chmod 600`(평문 로그 노출 완화), `statusline` `resets_at` 비-epoch 입력 방어.
+- **문서 정합성**: README SRC 경로(`source/my-claude`) 정정, 토큰 절감 수치 보정(~72%), 무결성 스크립트에 commands/agents·매뉴얼·.gitignore 포함, CLAUDE.local.md 커밋 규칙 참조 교정·마스킹 베스트에포트 명시, 플러그인 매뉴얼 자기모순 수정(미등록 `claude-mem` 제거).
+
+### v0.6.0 — 2026-06-08
+- `worktree-agent` 을 **skill → command 로 이동**(`commands/worktree-agent.md`). worktree 격리는 자동 판단보다 **사용자 명시 호출**이 적합 + `commands/`는 전역 심링크되어 발견 가능성 확보.
+- `skills/` 디렉토리 제거(빈 디렉토리·`.DS_Store`).
+- `.gitignore` 추가(`.DS_Store`).
 
 ### v0.5.0 — 2026-06-08
 - **참고 매뉴얼 추가** (§15): `claude-code-plugin-setup-guide.md`(플러그인 설치), `claude-code-permission-modes.md`(권한 모드), `serena-claude-code-manual.md`(Serena 연동).

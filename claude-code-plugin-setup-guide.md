@@ -23,7 +23,7 @@ claude
 
 ### Step 2. 마켓플레이스 등록
 
-Claude Code 프롬프트에서 아래 3개를 순서대로 입력합니다.
+Claude Code 프롬프트에서 아래 2개를 순서대로 입력합니다.
 
 ```
 /plugin marketplace add https://github.com/affaan-m/everything-claude-code
@@ -46,9 +46,6 @@ Claude Code 프롬프트에서 아래 3개를 순서대로 입력합니다.
 
 ```
 /plugin install claude-hud@claude-hud
-```
-```
-/plugin install claude-mem@thedotmack
 ```
 
 > 이미 설치된 경우 `Plugin '...' is already installed globally.` 메시지가 뜨며 정상입니다.

@@ -132,7 +132,13 @@
       "Bash(curl:*)",
       "Bash(python:*)",
       "Bash(python3:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(psql:*)",
+      "Bash(mysql:*)",
+      "Bash(mongosh:*)",
+      "Bash(kubectl:*)",
+      "Bash(terraform apply:*)",
+      "Bash(terraform destroy:*)"
     ],
     "defaultMode": "default"
   },
@@ -155,8 +161,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "nohup sh ~/.claude/audit-log.sh >/dev/null 2>&1 &",
-            "timeout": 600
+            "command": "sh ~/.claude/audit-log.sh",
+            "timeout": 10
           }
         ]
       }
